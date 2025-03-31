@@ -9,52 +9,69 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { type OnboardingFormValues } from "@/lib/schema";
+import { motion } from "framer-motion";
 
 interface ContactFormProps {
   control: Control<OnboardingFormValues>;
 }
 
+const fields = [
+  {
+    name: "mobileNumber",
+    label: "What's your mobile number?",
+    type: "tel",
+    placeholder: "Enter your mobile number",
+    component: Input,
+  },
+  {
+    name: "address",
+    label: "What's your complete address?",
+    type: "textarea",
+    placeholder: "Enter your complete address",
+    component: Textarea,
+  },
+];
+
 export function ContactForm({ control }: ContactFormProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-lg font-semibold">Contact Information</div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <FormField
-          control={control}
-          name="mobileNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mobile Number</FormLabel>
-              <FormControl>
-                <Input
-                  type="tel"
-                  placeholder="Enter your mobile number"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="address"
-          render={({ field }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Enter your complete address"
-                  className="min-h-[100px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+    <div className="space-y-8">
+      {fields.map((field, index) => (
+        <motion.div
+          key={field.name}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          <FormField
+            control={control}
+            name={field.name as keyof OnboardingFormValues}
+            render={({ field: formField }) => (
+              <FormItem>
+                <FormLabel className="text-lg font-medium text-gray-900 dark:text-white">
+                  {field.label}
+                </FormLabel>
+                <FormControl>
+                  {field.type === "textarea" ? (
+                    <Textarea
+                      {...formField}
+                      placeholder={field.placeholder}
+                      className="h-32 text-lg"
+                    />
+                  ) : (
+                    <Input
+                      {...formField}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      className="h-12 text-lg"
+                    />
+                  )}
+                </FormControl>
+                <FormMessage className="text-red-500 mt-2" />
+              </FormItem>
+            )}
+          />
+        </motion.div>
+      ))}
     </div>
   );
 }

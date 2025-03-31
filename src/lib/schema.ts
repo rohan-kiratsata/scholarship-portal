@@ -9,9 +9,7 @@ export const onboardingFormSchema = z.object({
   course: z.string().min(1, "Please select your course"),
   state: z.string().min(1, "Please select your state"),
   district: z.string().min(1, "Please select your district"),
-  dateOfBirth: z.date({
-    required_error: "Please select your date of birth",
-  }),
+  dateOfBirth: z.string().min(1, "Please enter your date of birth"),
   gender: z.string().min(1, "Please select your gender"),
   mobileNumber: z.string().min(10, "Please enter a valid mobile number"),
   address: z.string().min(10, "Please enter your complete address"),

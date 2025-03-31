@@ -14,95 +14,100 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type OnboardingFormValues } from "@/lib/schema";
+import { motion } from "framer-motion";
 
 interface EducationFormProps {
   control: Control<OnboardingFormValues>;
 }
 
+const fields = [
+  {
+    name: "course",
+    label: "What course are you pursuing?",
+    type: "select",
+    placeholder: "Select your course",
+    options: [
+      { value: "btech", label: "B.Tech" },
+      { value: "be", label: "B.E" },
+      { value: "bsc", label: "B.Sc" },
+      { value: "bca", label: "BCA" },
+      { value: "mtech", label: "M.Tech" },
+      { value: "mca", label: "MCA" },
+      { value: "msc", label: "M.Sc" },
+      { value: "other", label: "Other" },
+    ],
+    component: Select,
+  },
+  {
+    name: "state",
+    label: "Which state are you from?",
+    type: "select",
+    placeholder: "Select your state",
+    options: [
+      { value: "delhi", label: "Delhi" },
+      { value: "maharashtra", label: "Maharashtra" },
+      { value: "karnataka", label: "Karnataka" },
+      { value: "tamil-nadu", label: "Tamil Nadu" },
+      { value: "uttar-pradesh", label: "Uttar Pradesh" },
+      { value: "gujarat", label: "Gujarat" },
+    ],
+    component: Select,
+  },
+  {
+    name: "district",
+    label: "Which district are you from?",
+    type: "select",
+    placeholder: "Select your district",
+    options: [
+      { value: "district1", label: "District 1" },
+      { value: "district2", label: "District 2" },
+      { value: "district3", label: "District 3" },
+    ],
+    component: Select,
+  },
+];
+
 export function EducationForm({ control }: EducationFormProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-lg font-semibold">Education Details</div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <FormField
-          control={control}
-          name="course"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Course</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <div className="space-y-8">
+      {fields.map((field, index) => (
+        <motion.div
+          key={field.name}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          <FormField
+            control={control}
+            name={field.name as keyof OnboardingFormValues}
+            render={({ field: formField }) => (
+              <FormItem>
+                <FormLabel className="text-lg font-medium text-gray-900 dark:text-white">
+                  {field.label}
+                </FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your course" />
-                  </SelectTrigger>
+                  <Select
+                    onValueChange={formField.onChange}
+                    defaultValue={formField.value}
+                  >
+                    <SelectTrigger className="h-12 text-lg">
+                      <SelectValue placeholder={field.placeholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="btech">B.Tech</SelectItem>
-                  <SelectItem value="be">B.E</SelectItem>
-                  <SelectItem value="bsc">B.Sc</SelectItem>
-                  <SelectItem value="bca">BCA</SelectItem>
-                  <SelectItem value="mtech">M.Tech</SelectItem>
-                  <SelectItem value="mca">MCA</SelectItem>
-                  <SelectItem value="msc">M.Sc</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your state" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="delhi">Delhi</SelectItem>
-                  <SelectItem value="maharashtra">Maharashtra</SelectItem>
-                  <SelectItem value="karnataka">Karnataka</SelectItem>
-                  <SelectItem value="tamil-nadu">Tamil Nadu</SelectItem>
-                  <SelectItem value="uttar-pradesh">Uttar Pradesh</SelectItem>
-                  <SelectItem value="gujarat">Gujarat</SelectItem>
-                  {/* Add more states as needed */}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="district"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>District</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your district" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {/* Districts will be populated based on selected state */}
-                  <SelectItem value="district1">District 1</SelectItem>
-                  <SelectItem value="district2">District 2</SelectItem>
-                  <SelectItem value="district3">District 3</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+                <FormMessage className="text-red-500 mt-2" />
+              </FormItem>
+            )}
+          />
+        </motion.div>
+      ))}
     </div>
   );
 }

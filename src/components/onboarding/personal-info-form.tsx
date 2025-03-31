@@ -15,136 +15,134 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type OnboardingFormValues } from "@/lib/schema";
+import { motion } from "framer-motion";
 
 interface PersonalInfoFormProps {
   control: Control<OnboardingFormValues>;
 }
 
+const fields = [
+  {
+    name: "firstName",
+    label: "What's your first name?",
+    type: "text",
+    placeholder: "Enter your first name",
+    component: Input,
+  },
+  {
+    name: "lastName",
+    label: "What's your last name?",
+    type: "text",
+    placeholder: "Enter your last name",
+    component: Input,
+  },
+  {
+    name: "dateOfBirth",
+    label: "When were you born?",
+    type: "date",
+    placeholder: "Select your date of birth",
+    component: Input,
+  },
+  {
+    name: "gender",
+    label: "What's your gender?",
+    type: "select",
+    placeholder: "Select your gender",
+    options: [
+      { value: "male", label: "Male" },
+      { value: "female", label: "Female" },
+      { value: "other", label: "Other" },
+    ],
+    component: Select,
+  },
+  {
+    name: "caste",
+    label: "What's your caste?",
+    type: "select",
+    placeholder: "Select your caste",
+    options: [
+      { value: "general", label: "General" },
+      { value: "obc", label: "OBC" },
+      { value: "sc", label: "SC" },
+      { value: "st", label: "ST" },
+    ],
+    component: Select,
+  },
+  {
+    name: "religion",
+    label: "What's your religion?",
+    type: "select",
+    placeholder: "Select your religion",
+    options: [
+      { value: "hindu", label: "Hindu" },
+      { value: "muslim", label: "Muslim" },
+      { value: "christian", label: "Christian" },
+      { value: "sikh", label: "Sikh" },
+      { value: "buddhist", label: "Buddhist" },
+      { value: "jain", label: "Jain" },
+      { value: "other", label: "Other" },
+    ],
+    component: Select,
+  },
+  {
+    name: "annualIncome",
+    label: "What's your annual family income?",
+    type: "number",
+    placeholder: "Enter annual income",
+    component: Input,
+  },
+];
+
 export function PersonalInfoForm({ control }: PersonalInfoFormProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-lg font-semibold">Personal Information</div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <FormField
-          control={control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>First Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your first name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Last Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your last name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="caste"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Caste</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <div className="space-y-8">
+      {fields.map((field, index) => (
+        <motion.div
+          key={field.name}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          <FormField
+            control={control}
+            name={field.name as keyof OnboardingFormValues}
+            render={({ field: formField }) => (
+              <FormItem>
+                <FormLabel className="text-lg font-medium text-gray-900 dark:text-white">
+                  {field.label}
+                </FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your caste" />
-                  </SelectTrigger>
+                  {field.type === "select" ? (
+                    <Select
+                      onValueChange={formField.onChange}
+                      defaultValue={formField.value}
+                    >
+                      <SelectTrigger className="h-12 text-lg">
+                        <SelectValue placeholder={field.placeholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options?.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      {...formField}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      className="h-12 text-lg"
+                    />
+                  )}
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="obc">OBC</SelectItem>
-                  <SelectItem value="sc">SC</SelectItem>
-                  <SelectItem value="st">ST</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="religion"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Religion</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your religion" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="hindu">Hindu</SelectItem>
-                  <SelectItem value="muslim">Muslim</SelectItem>
-                  <SelectItem value="christian">Christian</SelectItem>
-                  <SelectItem value="sikh">Sikh</SelectItem>
-                  <SelectItem value="buddhist">Buddhist</SelectItem>
-                  <SelectItem value="jain">Jain</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="gender"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Gender</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your gender" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="annualIncome"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Annual Family Income</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="Enter annual income"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+                <FormMessage className="text-red-500 mt-2" />
+              </FormItem>
+            )}
+          />
+        </motion.div>
+      ))}
     </div>
   );
 }
