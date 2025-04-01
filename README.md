@@ -7,3 +7,10 @@
 ## BE
 
 - Pgsql with Supabase, Next.js as backend
+
+---
+
+TODO:
+
+- [ ] Fix middleware logic for signed up user
+- [ ]

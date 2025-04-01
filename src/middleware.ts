@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stackServerApp } from "./stack";
 
-export default function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const user = stackServerApp.getUser();
 
-  // auth based redirection
-  if (pathname.startsWith("/api/")) return NextResponse.next();
+  // Skip middleware for these routes to avoid infi redirecrts
+  if (pathname.startsWith("/api") || pathname.startsWith("/handler")) {
+    return NextResponse.next();
+  }
 
-  if (!user && pathname.startsWith("/"))
-    return NextResponse.redirect(new URL("/login", req.url));
+  const user = await stackServerApp.getUser();
 
-  if (pathname === "/sign-in" || pathname === "/login")
-    return NextResponse.redirect("/handler/sign-in");
+  if (!user) {
+    return NextResponse.redirect(new URL("/handler/sign-in", req.url));
+  }
 
-  if (pathname === "/sign-up") return NextResponse.redirect("/handler/sign-up");
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)", "/api/:path*"],
+};
