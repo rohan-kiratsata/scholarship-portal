@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import {
   FormControl,
   FormField,
@@ -26,9 +26,12 @@ import {
 import { allFields } from "@/static/onboarding-fields";
 import { useUser } from "@stackframe/stack";
 import { useRouter } from "next/navigation";
+import { createSupabaseClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 export function OnboardingForm() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingFormSchema),
     defaultValues: {
@@ -49,26 +52,71 @@ export function OnboardingForm() {
 
   const user = useUser();
   const router = useRouter();
+  const supabase = createSupabaseClient();
 
   const onSubmit = async (data: OnboardingFormValues) => {
     if (currentStep === allFields.length - 1) {
-      console.log(data);
-      // handling here
+      try {
+        setIsSubmitting(true);
 
-      // update onboarding flag
-      await user?.update({
-        clientMetadata: {
-          onboarded: true,
-        },
-      });
+        if (!user) {
+          throw new Error("No user found");
+        }
 
-      router.push("/");
+        // update profile with name
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({
+            full_name: `${data.firstName} ${data.lastName}`,
+          })
+          .eq("stack_id", user.id);
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        // add data to supabase
+        const { error: onboardingError } = await supabase
+          .from("onboarding_data")
+          .insert({
+            user_id: user.id,
+            education_level: data.course,
+            field_of_study: data.course,
+            phone_number: data.mobileNumber,
+            address: data.address,
+            caste: data.caste,
+            religion: data.religion,
+            annual_income: data.annualIncome,
+            state: data.state,
+            district: data.district,
+            date_of_birth: data.dateOfBirth,
+            gender: data.gender,
+          });
+
+        if (onboardingError) {
+          throw onboardingError;
+        }
+
+        // update onboarding flag on stack
+        await user.update({
+          clientMetadata: {
+            onboarded: true,
+          },
+        });
+
+        toast.success("Profile completed successfully!");
+        router.push("/");
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        toast.error("Failed to complete profile. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
     } else {
       await handleNext();
     }
   };
 
-  //
   const handleNext = async () => {
     const currentStepFields = allFields[currentStep].fields;
     const fieldNames = currentStepFields.map((field) => field.name);
@@ -165,7 +213,7 @@ export function OnboardingForm() {
             type="button"
             variant="outline"
             onClick={prevStep}
-            disabled={currentStep === 0}
+            disabled={currentStep === 0 || isSubmitting}
           >
             <ChevronLeft className="w-5 h-5" />
             Previous
@@ -175,9 +223,21 @@ export function OnboardingForm() {
             onClick={
               currentStep === allFields.length - 1 ? undefined : handleNext
             }
+            disabled={isSubmitting}
           >
-            {currentStep === allFields.length - 1 ? "Complete Profile" : "Next"}
-            <ChevronRight className="w-5 h-5" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Saving...
+              </>
+            ) : currentStep === allFields.length - 1 ? (
+              <>Complete Profile</>
+            ) : (
+              <>
+                Next
+                <ChevronRight className="w-5 h-5" />
+              </>
+            )}
           </Button>
         </div>
       </form>

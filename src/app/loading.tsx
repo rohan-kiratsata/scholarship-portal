@@ -1,5 +1,13 @@
+import Header from "@/components/global/header";
+import { Loader2 } from "lucide-react";
+
 export default function Loading() {
-  // Stack uses React Suspense, which will render this page while user data is being fetched.
-  // See: https://nextjs.org/docs/app/api-reference/file-conventions/loading
-  return <></>;
+  return (
+    <>
+      <Header />
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="w-10 h-10 animate-spin" />
+      </div>
+    </>
+  );
 }
