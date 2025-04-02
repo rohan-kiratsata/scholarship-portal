@@ -5,7 +5,12 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Skip middleware for these routes to avoid infi redirecrts
-  if (pathname.startsWith("/api") || pathname.startsWith("/handler")) {
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/handler") ||
+    pathname === "/onboarding" ||
+    pathname === "/"
+  ) {
     return NextResponse.next();
   }
 
@@ -13,6 +18,13 @@ export async function middleware(req: NextRequest) {
 
   if (!user) {
     return NextResponse.redirect(new URL("/handler/sign-in", req.url));
+  }
+
+  if (
+    user &&
+    (user.clientMetadata === null || user.clientMetadata?.onboarded === false)
+  ) {
+    return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
   return NextResponse.next();

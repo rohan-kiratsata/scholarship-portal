@@ -1,5 +1,17 @@
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+
+// Create a Supabase client with the service role key
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +26,8 @@ export async function POST(req: Request) {
 
     const userData = payload.data;
 
-    // Insert user data into Supabase
-    const { error } = await supabase.from("profiles").insert({
+    // Insert user data into Supabase using service role client
+    const { error } = await supabaseAdmin.from("profiles").insert({
       stack_id: userData.id,
       full_name: userData.display_name,
     });
