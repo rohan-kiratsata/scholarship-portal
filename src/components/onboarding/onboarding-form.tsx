@@ -24,9 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { allFields } from "@/static/onboarding-fields";
-import { useUser } from "@stackframe/stack";
 import { useRouter } from "next/navigation";
-import { createSupabaseClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 export function OnboardingForm() {
@@ -50,70 +48,24 @@ export function OnboardingForm() {
     },
   });
 
-  const user = useUser();
   const router = useRouter();
-  const supabase = createSupabaseClient();
 
   const onSubmit = async (data: OnboardingFormValues) => {
     if (currentStep === allFields.length - 1) {
       try {
         setIsSubmitting(true);
-
-        if (!user) {
-          throw new Error("No user found");
-        }
-
-        // update profile with name
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({
-            full_name: `${data.firstName} ${data.lastName}`,
-          })
-          .eq("stack_id", user.id);
-
-        if (profileError) {
-          throw profileError;
-        }
-
-        // add data to supabase
-        const { error: onboardingError } = await supabase
-          .from("onboarding_data")
-          .insert({
-            user_id: user.id,
-            education_level: data.course,
-            field_of_study: data.course,
-            phone_number: data.mobileNumber,
-            address: data.address,
-            caste: data.caste,
-            religion: data.religion,
-            annual_income: data.annualIncome,
-            state: data.state,
-            district: data.district,
-            date_of_birth: data.dateOfBirth,
-            gender: data.gender,
-          });
-
-        if (onboardingError) {
-          throw onboardingError;
-        }
-
-        // update onboarding flag on stack
-        await user.update({
-          clientMetadata: {
-            onboarded: true,
-          },
-        });
-
-        toast.success("Profile completed successfully!");
-        router.push("/");
+        console.log("Form data:", data);
+        localStorage.setItem("onboardingCompleted", "true");
+        toast.success("Onboarding completed successfully!");
+        router.push("/dashboard");
       } catch (error) {
-        console.error("Error submitting form:", error);
-        toast.error("Failed to complete profile. Please try again.");
+        console.error("Error during onboarding:", error);
+        toast.error("Something went wrong. Please try again.");
       } finally {
         setIsSubmitting(false);
       }
     } else {
-      await handleNext();
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
