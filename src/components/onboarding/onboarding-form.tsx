@@ -26,10 +26,13 @@ import {
 import { allFields } from "@/static/onboarding-fields";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/auth-store";
+import { saveUserProfile } from "@/services/user-service";
 
 export function OnboardingForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuthStore();
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingFormSchema),
     defaultValues: {
@@ -54,7 +57,20 @@ export function OnboardingForm() {
     if (currentStep === allFields.length - 1) {
       try {
         setIsSubmitting(true);
-        console.log("Form data:", data);
+
+        if (!user || !user.uid) {
+          toast.error("You must be logged in to complete onboarding");
+          router.push("/sign-in");
+          return;
+        }
+
+        // Save user data to Firestore
+        const result = await saveUserProfile(user.uid, data);
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
         localStorage.setItem("onboardingCompleted", "true");
         toast.success("Onboarding completed successfully!");
         router.push("/dashboard");
