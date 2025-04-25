@@ -3,54 +3,66 @@
 import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  hasCompletedOnboarding,
-  getUserProfile,
-} from "@/services/user-service";
 import { Loader2 } from "lucide-react";
+import { getScholarships } from "@/lib/firebase";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { user, loading, signOut } = useAuthStore();
   const router = useRouter();
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+
+  const [scholarships, setScholarships] = useState<any[]>([]);
+  const [filtered, setFiltered] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
 
   useEffect(() => {
-    // If not logged in, redirect to sign up
     if (!loading && !user) {
       router.push("/sign-up");
-      return;
-    }
-
-    // If logged in, check onboarding status
-    if (user) {
-      const checkOnboarding = async () => {
-        try {
-          const completed = await hasCompletedOnboarding(user.uid);
-          if (!completed) {
-            // User hasn't completed onboarding, redirect
-            router.push("/onboarding");
-            return;
-          }
-
-          // Get user profile data
-          const profileResult = await getUserProfile(user.uid);
-          if (profileResult.success && profileResult.data) {
-            setUserProfile(profileResult.data);
-          }
-        } catch (error) {
-          console.error("Error checking user profile:", error);
-        } finally {
-          setIsCheckingProfile(false);
-        }
-      };
-
-      checkOnboarding();
+    } else if (user) {
+      getScholarships().then((data) => {
+        setScholarships(data);
+        setFiltered(data);
+      });
     }
   }, [user, loading, router]);
 
-  // Show loading state while checking authentication or profile
-  if (loading || isCheckingProfile) {
+  useEffect(() => {
+    const filtered = scholarships.filter((s) => {
+      const matchesSearch = s.title
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const matchesDept =
+        departmentFilter === "all" || s.department === departmentFilter;
+      return matchesSearch && matchesDept;
+    });
+
+    // Sort by scheme_close date (latest first)
+    filtered.sort((a, b) => {
+      const dateA = a.deadlines?.scheme_close || "";
+      const dateB = b.deadlines?.scheme_close || "";
+      return dateA < dateB ? 1 : -1;
+    });
+
+    setFiltered(filtered);
+  }, [search, departmentFilter, scholarships]);
+
+  console.log(filtered);
+
+  const departments = Array.from(
+    new Set(scholarships.map((s) => s.department).filter(Boolean))
+  );
+
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -61,73 +73,71 @@ export default function Dashboard() {
     );
   }
 
-  // If no user is logged in, this will be briefly shown before redirecting
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="flex min-h-screen flex-col p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <button
-          onClick={signOut}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-        >
+    <div className="flex min-h-screen flex-col p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Your Scholarships</h1>
+        <Button onClick={signOut} variant="destructive">
           Sign Out
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow dark:bg-gray-800">
-        <div className="flex items-center mb-6">
-          {user.photoURL && (
-            <img
-              src={user.photoURL}
-              alt="Profile"
-              className="w-16 h-16 rounded-full mr-4"
-            />
-          )}
-          <div>
-            <h2 className="text-xl font-semibold">
-              {userProfile?.firstName
-                ? `${userProfile.firstName} ${userProfile.lastName}`
-                : user.displayName || "User"}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Input
+          className="border border-muted-foreground"
+          placeholder="Search by title"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Select onValueChange={setDepartmentFilter} value={departmentFilter}>
+          <SelectTrigger className="border border-muted-foreground">
+            <SelectValue placeholder="Filter by department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Departments</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept} value={dept}>
+                {dept}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        {userProfile && (
-          <div className="mt-6 space-y-4">
-            <h3 className="text-lg font-medium">Your Profile Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Course
+      <div className="grid gap-4">
+        {filtered.map((s) => (
+          <Card key={s.id}>
+            <CardHeader>
+              <CardTitle>{s.title}</CardTitle>
+              <p className="text-sm text-muted-foreground">{s.department}</p>
+              {s.deadlines?.scheme_close && (
+                <p className="text-sm mt-1">
+                  📅 Scheme closes on: {s.deadlines.scheme_close}
                 </p>
-                <p className="font-medium">{userProfile.course}</p>
-              </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Annual Income
-                </p>
-                <p className="font-medium">{userProfile.annualIncome}</p>
-              </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  State
-                </p>
-                <p className="font-medium">{userProfile.state}</p>
-              </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  District
-                </p>
-                <p className="font-medium">{userProfile.district}</p>
-              </div>
-            </div>
-          </div>
-        )}
+              )}
+            </CardHeader>
+            <CardContent className="space-x-4">
+              {s.specification && (
+                <a
+                  href={s.specification}
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  📄 Spec
+                </a>
+              )}
+              {s.faq && (
+                <a
+                  href={s.faq}
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  ❓ FAQ
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

@@ -1,0 +1,13 @@
+name: Cron Scrap Scholarship Scraper
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # 2am UTC
+  workflow_dispatch:
+
+jobs:
+  ping_scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call deployed scraper API
+        run: curl -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" -X GET https://example.com/api/scraper
