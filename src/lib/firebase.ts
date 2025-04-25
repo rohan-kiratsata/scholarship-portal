@@ -1,6 +1,14 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { collection, getDocs, getFirestore } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  setDoc,
+} from "firebase/firestore";
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -27,4 +35,17 @@ export async function getScholarships() {
     id: doc.id,
     ...doc.data(),
   }));
+}
+
+export async function getUserProfile(uid: string) {
+  const ref = doc(db, "users", uid);
+  const snapshot = await getDoc(ref);
+  return snapshot.exists()
+    ? { success: true, data: snapshot.data() }
+    : { success: false };
+}
+
+export async function updateUserProfile(uid: string, data: any) {
+  const ref = doc(db, "users", uid);
+  await setDoc(ref, data, { merge: true });
 }

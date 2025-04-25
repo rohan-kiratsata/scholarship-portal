@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/global/app-sidebar";
 
 export default function Dashboard() {
   const { user, loading, signOut } = useAuthStore();
@@ -74,71 +76,81 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Scholarships</h1>
-        <Button onClick={signOut} variant="destructive">
-          Sign Out
-        </Button>
-      </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="w-full p-5">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex gap-2 items-center">
+            <SidebarTrigger />
+            <h1 className="text-xl font-bold">Your Scholarships</h1>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Input
-          className="border border-muted-foreground"
-          placeholder="Search by title"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Select onValueChange={setDepartmentFilter} value={departmentFilter}>
-          <SelectTrigger className="border border-muted-foreground">
-            <SelectValue placeholder="Filter by department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Departments</SelectItem>
-            {departments.map((dept) => (
-              <SelectItem key={dept} value={dept}>
-                {dept}
-              </SelectItem>
+        <div className="">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <Input
+              className="border border-muted-foreground"
+              placeholder="Search by title"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Select
+              onValueChange={setDepartmentFilter}
+              value={departmentFilter}
+            >
+              <SelectTrigger className="border border-muted-foreground">
+                <SelectValue placeholder="Filter by department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-4">
+            {filtered.map((s) => (
+              <Card key={s.id}>
+                <CardHeader>
+                  <CardTitle>{s.title}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {s.department}
+                  </p>
+                  {s.deadlines?.scheme_close && (
+                    <p className="text-sm mt-1">
+                      📅 Scheme closes on: {s.deadlines.scheme_close}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="space-x-4">
+                  {s.specification && (
+                    <a
+                      href={s.specification}
+                      target="_blank"
+                      className="text-blue-600 underline"
+                    >
+                      📄 Spec
+                    </a>
+                  )}
+                  {s.faq && (
+                    <a
+                      href={s.faq}
+                      target="_blank"
+                      className="text-blue-600 underline"
+                    >
+                      ❓ FAQ
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
             ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid gap-4">
-        {filtered.map((s) => (
-          <Card key={s.id}>
-            <CardHeader>
-              <CardTitle>{s.title}</CardTitle>
-              <p className="text-sm text-muted-foreground">{s.department}</p>
-              {s.deadlines?.scheme_close && (
-                <p className="text-sm mt-1">
-                  📅 Scheme closes on: {s.deadlines.scheme_close}
-                </p>
-              )}
-            </CardHeader>
-            <CardContent className="space-x-4">
-              {s.specification && (
-                <a
-                  href={s.specification}
-                  target="_blank"
-                  className="text-blue-600 underline"
-                >
-                  📄 Spec
-                </a>
-              )}
-              {s.faq && (
-                <a
-                  href={s.faq}
-                  target="_blank"
-                  className="text-blue-600 underline"
-                >
-                  ❓ FAQ
-                </a>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+          </div>
+        </div>
+      </main>
+    </SidebarProvider>
   );
 }
