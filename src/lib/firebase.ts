@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -48,4 +49,26 @@ export async function getUserProfile(uid: string) {
 export async function updateUserProfile(uid: string, data: any) {
   const ref = doc(db, "users", uid);
   await setDoc(ref, data, { merge: true });
+}
+
+export async function saveScholarship(uid: string, scholarship: any) {
+  const docRef = doc(db, "users", uid, "saved_scholarships", scholarship.id);
+  await setDoc(docRef, scholarship);
+}
+
+export async function unsaveScholarship(uid: string, scholarshipId: string) {
+  const docRef = doc(db, "users", uid, "saved_scholarships", scholarshipId);
+  await deleteDoc(docRef);
+}
+
+export async function getSavedScholarships(uid: string) {
+  const colRef = collection(db, "users", uid, "saved_scholarships");
+  const snap = await getDocs(colRef);
+  return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function isScholarshipSaved(uid: string, scholarshipId: string) {
+  const docRef = doc(db, "users", uid, "saved_scholarships", scholarshipId);
+  const snap = await getDoc(docRef);
+  return snap.exists();
 }

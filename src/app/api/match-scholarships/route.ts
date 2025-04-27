@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { getUserProfile } from "@/services/user-service";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getScholarships } from "@/lib/firebase";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
+import { app } from "@/lib/firebase"; // make sure you have this
+
+const db = getFirestore(app);
 
 const ScholarshipMatchSchema = z.object({
   matches: z.array(
@@ -15,13 +19,23 @@ const ScholarshipMatchSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const { uid } = await req.json();
+  const { uid, refresh } = await req.json();
 
   if (!uid) {
     return NextResponse.json({ error: "Missing user ID" }, { status: 400 });
   }
 
   try {
+    const matchRef = doc(db, "user_matches", uid);
+
+    if (!refresh) {
+      const matchSnap = await getDoc(matchRef);
+      if (matchSnap.exists()) {
+        const cached = matchSnap.data();
+        return NextResponse.json({ matches: cached.matches });
+      }
+    }
+
     const userProfileRes = await getUserProfile(uid);
     const scholarships = await getScholarships();
 
@@ -65,6 +79,12 @@ Return output in this JSON format:
       model: openai("gpt-4o"),
       schema: ScholarshipMatchSchema,
       prompt,
+    });
+
+    // 3. Save matches to Firestore
+    await setDoc(matchRef, {
+      matches: object.matches,
+      updatedAt: Date.now(),
     });
 
     return NextResponse.json({ matches: object.matches });
