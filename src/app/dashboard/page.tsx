@@ -34,9 +34,24 @@ export default function Dashboard() {
   useEffect(() => {
     const checkOnboarding = async () => {
       if (user) {
+        // First check localStorage for faster response
+        const localOnboardingStatus =
+          localStorage.getItem("onboardingCompleted") === "true";
+
+        if (localOnboardingStatus) {
+          setIsOnboarded(true);
+          return;
+        }
+
+        // If not found in localStorage, check Firebase
         const onboardingStatus = await hasCompletedOnboarding(`${user.uid}`);
-        console.log(onboardingStatus);
+        console.log("Firebase onboarding status:", onboardingStatus);
         setIsOnboarded(onboardingStatus);
+
+        // If completed in Firebase but not in localStorage, update localStorage
+        if (onboardingStatus && !localOnboardingStatus) {
+          localStorage.setItem("onboardingCompleted", "true");
+        }
       }
     };
 

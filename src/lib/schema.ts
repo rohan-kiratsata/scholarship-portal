@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { CasteOption, ReligionOption, Gender } from "./constants";
 
 export const onboardingFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -8,7 +9,7 @@ export const onboardingFormSchema = z.object({
   annualIncome: z.string().min(1, "Please enter your annual income"),
   course: z.string().min(1, "Please select your course"),
   state: z.string().min(1, "Please select your state"),
-  district: z.string().min(1, "Please select your district"),
+  city: z.string().min(1, "Please select your city"),
   dateOfBirth: z.string().min(1, "Please enter your date of birth"),
   gender: z.string().min(1, "Please select your gender"),
   mobileNumber: z.string().min(10, "Please enter a valid mobile number"),

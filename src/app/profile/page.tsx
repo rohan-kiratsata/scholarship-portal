@@ -105,12 +105,9 @@ export default function ProfilePage() {
                   <Input {...register("state")} onChange={handleInputChange} />
 
                   <div className="flex items-center">
-                    <Label className="flex-1">District</Label>
+                    <Label className="flex-1">City</Label>
                   </div>
-                  <Input
-                    {...register("district")}
-                    onChange={handleInputChange}
-                  />
+                  <Input {...register("city")} onChange={handleInputChange} />
                 </div>
                 {isChanged && (
                   <div className="flex space-x-4">

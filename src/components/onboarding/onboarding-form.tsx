@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
 import {
   FormControl,
@@ -28,10 +28,16 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
 import { saveUserProfile } from "@/services/user-service";
+import { City } from "country-state-city";
 
 export function OnboardingForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSplashScreen, setShowSplashScreen] = useState(false);
+  const [splashTextIndex, setSplashTextIndex] = useState(0);
+  const [cityOptions, setCityOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
   const { user } = useAuthStore();
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingFormSchema),
@@ -43,7 +49,7 @@ export function OnboardingForm() {
       annualIncome: "",
       course: "",
       state: "",
-      district: "",
+      city: "",
       dateOfBirth: "",
       gender: "",
       mobileNumber: "",
@@ -52,33 +58,75 @@ export function OnboardingForm() {
   });
 
   const router = useRouter();
+  const selectedState = form.watch("state");
+
+  const splashScreenTexts = [
+    "Finding the best scholarships for you...",
+    "Setting up your profile...",
+    "Analyzing your eligibility...",
+    "Preparing your dashboard...",
+  ];
+
+  useEffect(() => {
+    if (selectedState) {
+      const cities = City.getCitiesOfState("IN", selectedState).map((city) => ({
+        value: city.name,
+        label: city.name,
+      }));
+      setCityOptions(cities);
+
+      form.setValue("city", "");
+    }
+  }, [selectedState, form]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (showSplashScreen) {
+      timer = setInterval(() => {
+        setSplashTextIndex((prev) => {
+          const nextIndex = prev + 1;
+          if (nextIndex >= splashScreenTexts.length) {
+            clearInterval(timer);
+
+            // Redirect after showing all messages
+            setTimeout(() => {
+              localStorage.setItem("onboardingCompleted", "true");
+              router.push("/dashboard");
+            }, 1000);
+
+            return prev;
+          }
+          return nextIndex;
+        });
+      }, 1500);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [showSplashScreen, splashScreenTexts.length, router]);
 
   const onSubmit = async (data: OnboardingFormValues) => {
     if (currentStep === allFields.length) {
-      try {
-        setIsSubmitting(true);
+      setIsSubmitting(true);
 
-        if (!user || !user.uid) {
-          toast.error("You must be logged in to complete onboarding");
-          router.push("/sign-in");
-          return;
+      // Save user profile data to Firebase
+      if (user) {
+        try {
+          await saveUserProfile(user.uid, data);
+          // Show splash screen after successfully saving data
+          setIsSubmitting(false);
+          setShowSplashScreen(true);
+        } catch (error) {
+          console.error("Error saving profile:", error);
+          toast.error("Failed to save profile. Please try again.");
+          setIsSubmitting(false);
         }
-
-        // Save user data to Firestore
-        const result = await saveUserProfile(user.uid, data);
-
-        if (!result.success) {
-          throw new Error(result.error);
-        }
-
-        localStorage.setItem("onboardingCompleted", "true");
-        toast.success("Onboarding completed successfully!");
-        router.push("/dashboard");
-      } catch (error) {
-        console.error("Error during onboarding:", error);
-        toast.error("Something went wrong. Please try again.");
-      } finally {
+      } else {
+        toast.error("User not authenticated. Please sign in again.");
         setIsSubmitting(false);
+        router.push("/sign-in");
       }
     } else {
       setCurrentStep((prev) => prev + 1);
@@ -109,6 +157,59 @@ export function OnboardingForm() {
       setCurrentStep((prev) => prev - 1);
     }
   };
+
+  // Render splash screen
+  if (showSplashScreen) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center  z-50">
+        <div className="max-w-md w-full mx-auto text-center space-y-10 p-8 rounded-xl bg-primary/5 backdrop-blur-sm">
+          <div className="relative h-24 flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              <motion.h2
+                key={splashTextIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="text-2xl font-bold text-primary absolute"
+              >
+                {splashScreenTexts[splashTextIndex]}
+              </motion.h2>
+            </AnimatePresence>
+          </div>
+
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+              >
+                <div className="w-2 h-2 bg-white rounded-full m-1"></div>
+              </motion.div>
+            </div>
+          </div>
+
+          <div className="flex justify-center space-x-2">
+            {splashScreenTexts.map((_, index) => (
+              <motion.div
+                key={index}
+                className={`w-2 h-2 rounded-full ${
+                  index === splashTextIndex ? "bg-primary" : "bg-primary/20"
+                }`}
+                animate={{ scale: index === splashTextIndex ? [1, 1.3, 1] : 1 }}
+                transition={{
+                  repeat: index === splashTextIndex ? Infinity : 0,
+                  duration: 1,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Render welcome screen for step 0
   if (currentStep === 0) {
@@ -163,19 +264,29 @@ export function OnboardingForm() {
                             <Select
                               onValueChange={formField.onChange}
                               defaultValue={formField.value}
+                              value={formField.value}
                             >
                               <SelectTrigger className="w-full" size="default">
                                 <SelectValue placeholder={field.placeholder} />
                               </SelectTrigger>
                               <SelectContent className="w-full">
-                                {field.options?.map((option) => (
-                                  <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
+                                {field.name === "city"
+                                  ? cityOptions.map((option) => (
+                                      <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))
+                                  : field.options?.map((option) => (
+                                      <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                      >
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
                               </SelectContent>
                             </Select>
                           ) : field.type === "textarea" ? (

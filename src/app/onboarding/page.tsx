@@ -23,8 +23,21 @@ export default function OnboardingPage() {
     if (user) {
       const checkOnboardingStatus = async () => {
         try {
+          // First check localStorage for faster response
+          const localOnboardingStatus =
+            localStorage.getItem("onboardingCompleted") === "true";
+
+          if (localOnboardingStatus) {
+            // User has already completed onboarding according to localStorage, redirect to dashboard
+            router.push("/dashboard");
+            return;
+          }
+
+          // If not found in localStorage, check Firebase
           const completed = await hasCompletedOnboarding(user.uid);
           if (completed) {
+            // Update localStorage if Firebase says onboarding is completed
+            localStorage.setItem("onboardingCompleted", "true");
             // User has already completed onboarding, redirect to dashboard
             router.push("/dashboard");
           }
@@ -40,17 +53,6 @@ export default function OnboardingPage() {
       setIsCheckingOnboarding(false);
     }
   }, [user, loading, router]);
-
-  // if (loading || isCheckingOnboarding) {
-  //   return (
-  //     <div className="h-full flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-  //       <div className="text-center">
-  //         <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-  //         <p className="mt-2 text-gray-600 dark:text-gray-400">Loading...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="h-full bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">

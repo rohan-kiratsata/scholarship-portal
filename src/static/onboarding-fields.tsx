@@ -1,6 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CASTE_OPTIONS, RELIGION_OPTIONS } from "@/lib/constants";
+import { State, City } from "country-state-city";
 
 type FieldOption = {
   value: string;
@@ -14,6 +16,7 @@ type Field = {
   placeholder: string;
   component: any;
   options?: FieldOption[];
+  dependsOn?: string;
 };
 
 type Step = {
@@ -21,6 +24,12 @@ type Step = {
   fields: Field[];
   stepLabel: string;
 };
+
+// Get all states of India (country code IN)
+const INDIA_STATES = State.getStatesOfCountry("IN").map((state) => ({
+  value: state.isoCode,
+  label: state.name,
+}));
 
 export const allFields: Step[] = [
   // Personal Information
@@ -83,12 +92,7 @@ export const allFields: Step[] = [
         label: "What's your caste?",
         type: "select",
         placeholder: "Select your caste",
-        options: [
-          { value: "general", label: "General" },
-          { value: "obc", label: "OBC" },
-          { value: "sc", label: "SC" },
-          { value: "st", label: "ST" },
-        ],
+        options: CASTE_OPTIONS,
         component: Select,
       },
     ],
@@ -102,15 +106,7 @@ export const allFields: Step[] = [
         label: "What's your religion?",
         type: "select",
         placeholder: "Select your religion",
-        options: [
-          { value: "hindu", label: "Hindu" },
-          { value: "muslim", label: "Muslim" },
-          { value: "christian", label: "Christian" },
-          { value: "sikh", label: "Sikh" },
-          { value: "buddhist", label: "Buddhist" },
-          { value: "jain", label: "Jain" },
-          { value: "other", label: "Other" },
-        ],
+        options: RELIGION_OPTIONS,
         component: Select,
       },
     ],
@@ -161,30 +157,26 @@ export const allFields: Step[] = [
         label: "Which state are you from?",
         type: "select",
         placeholder: "Select your state",
-        options: [
-          { value: "delhi", label: "Delhi" },
-          { value: "maharashtra", label: "Maharashtra" },
-          { value: "karnataka", label: "Karnataka" },
-          { value: "tamil-nadu", label: "Tamil Nadu" },
-          { value: "uttar-pradesh", label: "Uttar Pradesh" },
-          { value: "gujarat", label: "Gujarat" },
-        ],
-        component: Select,
-      },
-      {
-        name: "district",
-        label: "Which district are you from?",
-        type: "select",
-        placeholder: "Select your district",
-        options: [
-          { value: "district1", label: "District 1" },
-          { value: "district2", label: "District 2" },
-          { value: "district3", label: "District 3" },
-        ],
+        options: INDIA_STATES,
         component: Select,
       },
     ],
-    stepLabel: "Where are you from?",
+    stepLabel: "Which state are you from?",
+  },
+  {
+    step: 9,
+    fields: [
+      {
+        name: "city",
+        label: "Which city are you from?",
+        type: "select",
+        placeholder: "Select your city",
+        options: [], // Will be populated dynamically based on selected state
+        component: Select,
+        dependsOn: "state",
+      },
+    ],
+    stepLabel: "Which city are you from?",
   },
 
   // Contact Information
