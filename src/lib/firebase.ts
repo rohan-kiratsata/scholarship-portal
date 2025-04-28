@@ -72,3 +72,21 @@ export async function isScholarshipSaved(uid: string, scholarshipId: string) {
   const snap = await getDoc(docRef);
   return snap.exists();
 }
+
+// export function toggleSave(
+//   scholarship: any,
+//   user: any,
+//   savedScholarships: any,
+//   setSavedScholarships: any
+// ) {
+//   if (!user) return;
+//   if (savedScholarships.includes(scholarship.id)) {
+//     unsaveScholarship(user.uid, scholarship.id);
+//     setSavedScholarships((prev: any) =>
+//       prev.filter((id: any) => id !== scholarship.id)
+//     );
+//   } else {
+//     saveScholarship(user.uid, scholarship);
+//     setSavedScholarships((prev: any) => [...prev, scholarship.id]);
+//   }
+// }

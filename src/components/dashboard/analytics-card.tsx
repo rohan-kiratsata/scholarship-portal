@@ -10,13 +10,13 @@ export default function AnalyticsCard({
 }) {
   return (
     <>
-      <Card className="rounded-2xl p-3 shadow-none border border-neutral-200">
+      <Card className="rounded-2xl p-3 shadow-none border border-neutral-200 hover:bg-primary group hover:text-white">
         <CardHeader className="p-0 mb-2">
-          <CardTitle className="text-sm text-muted-foreground">
+          <CardTitle className="text-base text-muted-foreground group-hover:text-white">
             {dataTitle}
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-primary p-0 text-3xl font-bold">
+        <CardContent className="text-primary p-0 text-4xl font-bold font-bricolage group-hover:text-white">
           {dataVal}
         </CardContent>
       </Card>

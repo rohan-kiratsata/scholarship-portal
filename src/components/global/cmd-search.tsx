@@ -10,10 +10,12 @@ import {
   CommandGroup,
   CommandEmpty,
 } from "@/components/ui/command";
+import { useCommandPalette } from "@/store/cmd-store";
 
 export function CommandPalette({ scholarships }: { scholarships: any[] }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const { isOpen, setIsOpen } = useCommandPalette();
 
   const [AIResults, setAIResults] = useState<any[]>([]);
   const [AILoading, setAILoading] = useState(false);
@@ -38,16 +40,16 @@ export function CommandPalette({ scholarships }: { scholarships: any[] }) {
     const down = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen((open) => !open);
+        setIsOpen(!isOpen);
       }
     };
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, []);
+  }, [isOpen, setIsOpen]);
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
       <Command>
         <CommandInput
           placeholder="Ask anything like 'scholarships for SC students in Maharashtra'..."

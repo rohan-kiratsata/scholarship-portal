@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AnalyticsCard from "@/components/dashboard/analytics-card";
 import { Badge } from "@/components/ui/badge";
 import { CommandPalette } from "@/components/global/cmd-search";
-import { LikeButton } from "@/components/global/like-button";
+import HeaderSearchBar from "@/components/global/cmd-searchbar";
 
 export default function Dashboard() {
   const { user, loading } = useAuthStore();
@@ -161,10 +161,11 @@ export default function Dashboard() {
         <div className="flex min-h-screen flex-col p-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold">
+            <h1 className="text-3xl font-bold font-bricolage">
               Welcome, {user?.displayName}
             </h1>
-            <div>
+            <div className="flex gap-5">
+              <HeaderSearchBar />
               <Avatar>
                 <AvatarImage
                   src={user?.photoURL || "/default-avatar.png"}
@@ -210,9 +211,12 @@ export default function Dashboard() {
                 onClick={refreshMatches}
                 variant="outline"
                 size={"icon"}
+                className="rounded-full cursor-pointer hover:bg-primary hover:text-white"
                 disabled={loadingMatches}
               >
-                <RefreshCcw className="w-4 h-4" />
+                <RefreshCcw
+                  className={`w-4 h-4 ${loadingMatches ? "animate-spin" : ""}`}
+                />
               </Button>
             </div>
             {loadingMatches ? (
@@ -226,17 +230,25 @@ export default function Dashboard() {
                   {topMatches.map((s) => (
                     <Card
                       key={s.id}
-                      className="border border-neutral-200 shadow-none p-4"
+                      className="border border-neutral-200 shadow-none p-4 rounded-2xl"
                     >
                       <CardContent className="p-0">
                         <div className="flex gap-3 justify-between">
                           <p className="font-semibold line-clamp-2">
                             {s.title}
                           </p>
-                          <LikeButton
-                            liked={savedScholarships.includes(s.id)}
-                            onToggle={() => toggleSave(s)}
-                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleSave(s)}
+                            className="h-8 w-8 p-1 rounded-full border border-rose-400 hover:bg-rose-100"
+                          >
+                            {savedScholarships.includes(s.id) ? (
+                              <Heart className="w-5 h-5 fill-rose-400 text-rose-400" />
+                            ) : (
+                              <Heart className="w-5 h-5 text-rose-400" />
+                            )}
+                          </Button>
                         </div>
                         <span className="text-muted-foreground text-sm line-clamp-1 w-full">
                           {s.department}
