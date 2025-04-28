@@ -23,7 +23,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-export default function page() {
+export default function ScholarshipPage() {
   const { user, loading } = useAuthStore();
   const [scholarships, setScholarships] = useState<any[]>([]);
 
