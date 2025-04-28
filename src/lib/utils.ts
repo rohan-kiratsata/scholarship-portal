@@ -16,3 +16,19 @@ export function fixUrl(url?: string): string {
     "https://scholarships.gov.in"
   );
 }
+
+export function greetings(): string {
+  const currentHour = new Date().getHours();
+
+  if (currentHour >= 5 && currentHour < 12) {
+    return "Good morning!";
+  } else if (currentHour >= 12 && currentHour < 17) {
+    return "Good afternoon!";
+  } else if (currentHour >= 17 && currentHour < 21) {
+    return "Good evening!";
+  } else if (currentHour >= 21 || currentHour < 5) {
+    return "Happy late night!";
+  } else {
+    return "Welcome!";
+  }
+}

@@ -41,16 +41,16 @@ export default function OnboardingPage() {
     }
   }, [user, loading, router]);
 
-  if (loading || isCheckingOnboarding) {
-    return (
-      <div className="h-full flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2 text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading || isCheckingOnboarding) {
+  //   return (
+  //     <div className="h-full flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+  //       <div className="text-center">
+  //         <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+  //         <p className="mt-2 text-gray-600 dark:text-gray-400">Loading...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="h-full bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">

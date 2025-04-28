@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { getUserProfile } from "@/services/user-service";
+import {
+  getUserProfile,
+  hasCompletedOnboarding,
+} from "@/services/user-service";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getScholarships } from "@/lib/firebase";
 import { openai } from "@ai-sdk/openai";
@@ -26,6 +29,15 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Check if user has completed onboarding
+    const onboardingCompleted = await hasCompletedOnboarding(uid);
+    if (!onboardingCompleted) {
+      return NextResponse.json(
+        { error: "Onboarding not completed" },
+        { status: 400 }
+      );
+    }
+
     const matchRef = doc(db, "user_matches", uid);
 
     if (!refresh) {

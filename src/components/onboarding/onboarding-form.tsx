@@ -54,7 +54,7 @@ export function OnboardingForm() {
   const router = useRouter();
 
   const onSubmit = async (data: OnboardingFormValues) => {
-    if (currentStep === allFields.length - 1) {
+    if (currentStep === allFields.length) {
       try {
         setIsSubmitting(true);
 
@@ -86,7 +86,13 @@ export function OnboardingForm() {
   };
 
   const handleNext = async () => {
-    const currentStepFields = allFields[currentStep].fields;
+    // Skip validation for welcome screen
+    if (currentStep === 0) {
+      setCurrentStep(1);
+      return;
+    }
+
+    const currentStepFields = allFields[currentStep - 1].fields;
     const fieldNames = currentStepFields.map((field) => field.name);
 
     const isValid = await Promise.all(
@@ -104,11 +110,29 @@ export function OnboardingForm() {
     }
   };
 
+  // Render welcome screen for step 0
+  if (currentStep === 0) {
+    return (
+      <div className="max-w-md mx-auto text-center space-y-8">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Welcome!
+        </h2>
+        <p className="text-gray-600 dark:text-gray-300">
+          To start using the app, please complete the onboarding process.
+        </p>
+        <Button onClick={() => setCurrentStep(1)} className="w-full">
+          Get Started
+          <ChevronRight className="w-5 h-5 ml-2" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="text-center text-sm text-gray-500">
-          Step {currentStep + 1} of {allFields.length}
+          Step {currentStep} of {allFields.length}
         </div>
         <div className="relative min-h-[400px]">
           <AnimatePresence mode="wait">
@@ -122,12 +146,12 @@ export function OnboardingForm() {
             >
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                  {allFields[currentStep].stepLabel}
+                  {allFields[currentStep - 1].stepLabel}
                 </h2>
               </div>
 
               <div className="max-w-md mx-auto space-y-4">
-                {allFields[currentStep].fields.map((field) => (
+                {allFields[currentStep - 1].fields.map((field) => (
                   <FormField
                     key={field.name}
                     control={form.control}
@@ -181,16 +205,14 @@ export function OnboardingForm() {
             type="button"
             variant="outline"
             onClick={prevStep}
-            disabled={currentStep === 0 || isSubmitting}
+            disabled={currentStep === 1 || isSubmitting}
           >
             <ChevronLeft className="w-5 h-5" />
             Previous
           </Button>
           <Button
-            type={currentStep === allFields.length - 1 ? "submit" : "button"}
-            onClick={
-              currentStep === allFields.length - 1 ? undefined : handleNext
-            }
+            type={currentStep === allFields.length ? "submit" : "button"}
+            onClick={currentStep === allFields.length ? undefined : handleNext}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -198,7 +220,7 @@ export function OnboardingForm() {
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Saving...
               </>
-            ) : currentStep === allFields.length - 1 ? (
+            ) : currentStep === allFields.length ? (
               <>Complete Profile</>
             ) : (
               <>

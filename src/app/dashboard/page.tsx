@@ -19,26 +19,42 @@ import AnalyticsCard from "@/components/dashboard/analytics-card";
 import { Badge } from "@/components/ui/badge";
 import { CommandPalette } from "@/components/global/cmd-search";
 import HeaderSearchBar from "@/components/global/cmd-searchbar";
+import { greetings } from "@/lib/utils";
+import { hasCompletedOnboarding } from "@/services/user-service";
 
 export default function Dashboard() {
   const { user, loading } = useAuthStore();
   const router = useRouter();
-
+  const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
   const [scholarships, setScholarships] = useState<any[]>([]);
   const [topMatches, setTopMatches] = useState<any[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [savedScholarships, setSavedScholarships] = useState<string[]>([]);
 
   useEffect(() => {
+    const checkOnboarding = async () => {
+      if (user) {
+        const onboardingStatus = await hasCompletedOnboarding(`${user.uid}`);
+        console.log(onboardingStatus);
+        setIsOnboarded(onboardingStatus);
+      }
+    };
+
+    checkOnboarding();
+  }, [user]);
+
+  useEffect(() => {
     if (!loading && !user) {
       router.push("/sign-up");
+    } else if (isOnboarded === false) {
+      router.push("/onboarding");
     } else if (user) {
       getScholarships().then((data) => {
         setScholarships(data);
         fetchMatches(user.uid, data);
       });
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isOnboarded]);
 
   useEffect(() => {
     if (user) {
@@ -141,12 +157,12 @@ export default function Dashboard() {
     }
   }
 
-  if (loading) {
+  if (loading || isOnboarded === null) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading...</p>
+          <p className="mt-2">Redirecting...</p>
         </div>
       </div>
     );
@@ -162,7 +178,7 @@ export default function Dashboard() {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold font-bricolage">
-              Welcome, {user?.displayName}
+              {greetings()} {user?.displayName}
             </h1>
             <div className="flex gap-5">
               <HeaderSearchBar />
