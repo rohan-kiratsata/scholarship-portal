@@ -10,4 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call deployed scraper API
-        run: curl -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" -X GET https://grantly-ai.vercel.app/api/scraper
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl -H "Authorization: Bearer $CRON_SECRET" -X GET https://grantly-ai.vercel.app/api/scraper
